@@ -1,0 +1,129 @@
+# Tasks Configuration
+
+workflow_design_tasks:
+  - id: "design_lease_exit_workflow"
+    name: "Design Lease Exit Workflow"
+    description: "Create a workflow for the lease exit process"
+    agent: "workflow_design_specialist"
+    expected_output:
+      type: "workflow"
+      schema:
+        steps: "array"
+        roles: "array"
+        forms: "array"
+        notifications: "array"
+  
+  - id: "update_workflow_status"
+    name: "Update Workflow Status"
+    description: "Update the status of a workflow instance"
+    agent: "workflow_design_specialist"
+    expected_output:
+      type: "status_update"
+      schema:
+        status: "string"
+        message: "string"
+        updated_at: "datetime"
+
+form_creation_tasks:
+  - id: "create_initial_form"
+    name: "Create Initial Form"
+    description: "Create the initial lease exit form"
+    agent: "form_creation_expert"
+    expected_output:
+      type: "form_template"
+      schema:
+        form_type: "string"
+        fields: "array"
+        required_role: "string"
+  
+  - id: "validate_form_submission"
+    name: "Validate Form Submission"
+    description: "Validate a form submission"
+    agent: "form_creation_expert"
+    expected_output:
+      type: "validation_result"
+      schema:
+        is_valid: "boolean"
+        errors: "array"
+        validated_data: "object"
+  
+  - id: "process_department_review"
+    name: "Process Department Review"
+    description: "Process a department review form"
+    agent: "form_creation_expert"
+    expected_output:
+      type: "processed_review"
+      schema:
+        form_data: "object"
+        status: "string"
+        next_steps: "array"
+
+approval_process_tasks:
+  - id: "create_approval_chain"
+    name: "Create Approval Chain"
+    description: "Create an approval chain for a lease exit"
+    agent: "approval_process_architect"
+    expected_output:
+      type: "approval_chain"
+      schema:
+        steps: "array"
+        current_step: "integer"
+        status: "string"
+  
+  - id: "process_approval_decision"
+    name: "Process Approval Decision"
+    description: "Process an approval decision"
+    agent: "approval_process_architect"
+    expected_output:
+      type: "approval_result"
+      schema:
+        is_approved: "boolean"
+        status: "string"
+        comments: "string"
+        updated_at: "datetime"
+  
+  - id: "send_notifications"
+    name: "Send Notifications"
+    description: "Send notifications to stakeholders"
+    agent: "approval_process_architect"
+    expected_output:
+      type: "notification_result"
+      schema:
+        sent_count: "integer"
+        failed_count: "integer"
+        recipients: "array"
+
+notification_tasks:
+  - id: "create_notification"
+    name: "Create Notification"
+    description: "Create a notification for a lease exit update"
+    agent: "notification_specialist"
+    expected_output:
+      type: "notification"
+      schema:
+        subject: "string"
+        message: "string"
+        recipients: "array"
+        status: "string"
+  
+  - id: "send_email_notification"
+    name: "Send Email Notification"
+    description: "Send an email notification"
+    agent: "notification_specialist"
+    expected_output:
+      type: "email_result"
+      schema:
+        success: "boolean"
+        message: "string"
+        sent_at: "datetime"
+  
+  - id: "process_workflow_update"
+    name: "Process Workflow Update"
+    description: "Process and send notifications for a workflow update"
+    agent: "notification_specialist"
+    expected_output:
+      type: "notification_batch"
+      schema:
+        success_count: "integer"
+        failure_count: "integer"
+        details: "array"

@@ -1,177 +1,130 @@
 # Lease Exit System
 
-A sophisticated workflow management system for handling lease exit processes, built with Crew AI, FastAPI, and React.
+A comprehensive workflow automation system for managing lease exit processes using AI-powered agents and the Crew AI framework.
 
-## Features
+## Overview
 
-- Dynamic workflow orchestration using Crew AI agents
-- Customizable form creation and management
-- Document upload and management
-- Real-time notifications via email and in-app alerts
-- Role-based access control
-- Approval chain management
-- Comprehensive API documentation
-- Modern React-based frontend
+The Lease Exit System automates the complex process of exiting leases, managing forms, approvals, and notifications to all stakeholders. The application orchestrates multiple specialized AI agents to handle different aspects of the lease exit workflow.
 
-## System Requirements
+## Key Features
+
+- **AI-Powered Workflow Management**: Automated process orchestration using specialized AI agents
+- **Dynamic Form Generation**: Context-aware form creation and validation
+- **Approval Management**: Structured approval processes with role-based permissions
+- **Automated Notifications**: Timely notifications to all stakeholders
+- **Audit Trail**: Complete history of all activities and decisions
+- **Integration Capabilities**: Connects with external systems via APIs
+
+## Architecture
+
+### Backend
+
+- **Framework**: FastAPI
+- **Database**: MongoDB
+- **AI Orchestration**: Crew AI Framework
+- **Task Queue**: Celery with Redis
+
+### Frontend
+
+- **Framework**: React with Material UI
+- **State Management**: React Query
+- **Forms**: Formik with Yup validation
+
+## Specialized Agents
+
+- **Workflow Designer Agent**: Designs and optimizes lease exit workflows
+- **Form Creator Agent**: Generates dynamic forms based on lease context
+- **Approval Architect Agent**: Manages the approval process
+- **Notification Specialist Agent**: Handles all stakeholder communications
+
+## Setup and Installation
+
+### Prerequisites
 
 - Python 3.9+
 - Node.js 16+
-- MongoDB 5.0+
-- Redis 6.0+
+- MongoDB
+- Redis
 
-## Installation
+### Backend Setup
 
 1. Clone the repository:
-```bash
-git clone https://github.com/your-org/lease-exit-system.git
-cd lease-exit-system
-```
+   ```
+   git clone https://github.com/yourusername/lease-exit-system.git
+   cd lease-exit-system
+   ```
 
 2. Create and activate a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+   ```
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
-3. Install Python dependencies:
-```bash
-pip install -r requirements.txt
-```
+3. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
 
 4. Set up environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
+   ```
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
 
-5. Install frontend dependencies:
-```bash
-cd frontend
-npm install
-```
+5. Run the application:
+   ```
+   uvicorn main:app --reload
+   ```
 
-## Configuration
+### Frontend Setup
 
-1. Configure MongoDB:
-- Install MongoDB if not already installed
-- Create a new database named `lease_exit_system`
-- Update the `MONGODB_URI` in your `.env` file
+1. Navigate to the frontend directory:
+   ```
+   cd frontend
+   ```
 
-2. Configure Email:
-- Set up an email account for notifications
-- Update the SMTP settings in your `.env` file
+2. Install dependencies:
+   ```
+   npm install
+   ```
 
-3. Configure OpenAI:
-- Get an API key from OpenAI
-- Add it to your `.env` file
+3. Start the development server:
+   ```
+   npm start
+   ```
 
-## Running the Application
+## Usage
 
-1. Start the backend server:
-```bash
-# From the root directory
-python -m uvicorn api.server:app --reload
-```
+1. Access the application at `http://localhost:3000`
+2. Log in with your credentials
+3. Create a new lease exit request
+4. Follow the guided workflow to complete the process
 
-2. Start the frontend development server:
-```bash
-# From the frontend directory
-npm start
-```
+## Development
 
-3. Start the Redis server:
-```bash
-redis-server
-```
+### Adding New Agents
 
-4. Start the Celery worker (for background tasks):
-```bash
-celery -A tasks worker --loglevel=info
-```
+1. Create a new agent class in the `agents/` directory
+2. Register the agent in `config/agents.yaml`
+3. Add the agent to the appropriate workflow in `config/workflows.yaml`
 
-The application will be available at:
-- Backend API: http://localhost:8000
-- Frontend: http://localhost:3000
-- API Documentation: http://localhost:8000/docs
+### Creating New Tasks
 
-## Project Structure
-
-```
-lease_exit_system/
-├── api/                    # FastAPI application
-│   ├── routes/            # API endpoints
-│   └── server.py          # Main server file
-├── database/              # Database models and connections
-├── frontend/              # React frontend application
-├── utils/                 # Utility functions and tools
-├── workflows/             # Crew AI workflow definitions
-├── tasks/                 # Background tasks
-├── tests/                 # Test files
-├── config/               # Configuration files
-└── uploads/              # File upload directory
-```
-
-## API Documentation
-
-The API documentation is automatically generated and can be accessed at:
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+1. Define task class in the `tasks/` directory
+2. Register task in `config/tasks.yaml`
+3. Implement task execution logic
 
 ## Testing
 
-Run the test suite:
-```bash
+Run tests using pytest:
+```
 pytest
 ```
-
-Run with coverage:
-```bash
-pytest --cov=.
-```
-
-## Workflow Steps
-
-1. **Initiation**
-   - Lease Exit Management Team submits initial form
-   - System notifies Advisory, IFM, and Legal
-
-2. **Advisory Review**
-   - Advisory completes Lease Requirements & Cost Information form
-   - System notifies Legal, IFM, and Accounting
-
-3. **IFM Review**
-   - IFM completes Exit Requirements Scope form
-   - System notifies MAC
-
-4. **MAC Review**
-   - MAC completes Exit Requirements Scope form
-   - System notifies PJM
-
-5. **PJM Review**
-   - PJM completes Exit Requirements Scope form
-   - System notifies Lease Exit Management Team
-
-6. **Final Review**
-   - Lease Exit Management Team reviews all details
-   - Marks lease exit as Ready for Approval
-
-7. **Approval Process**
-   - Stakeholders provide Approve/Reject decisions
-   - System updates status based on decisions
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Support
+## Contributing
 
-For support, please contact the development team or create an issue in the repository. 
+Contributions are welcome! Please feel free to submit a Pull Request. 

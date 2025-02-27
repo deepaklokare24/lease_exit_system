@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  # Backend API service
+  api:
+    build: .
+    container_name: lease-exit-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - /app/frontend/node_modules
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/lease_exit_system
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ENV=development
+    depends_on:
+      - mongo
+      - redis
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend development server
+  frontend:
+    image: node:16-alpine
+    container_name: lease-exit-frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    command: sh -c "npm install && npm start"
+
+  # MongoDB database
+  mongo:
+    image: mongo:5.0
+    container_name: lease-exit-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=lease_exit_system
+
+  # Redis for task queue and caching
+  redis:
+    image: redis:6.2-alpine
+    container_name: lease-exit-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Celery worker for background tasks
+  worker:
+    build: .
+    container_name: lease-exit-worker
+    volumes:
+      - .:/app
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/lease_exit_system
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ENV=development
+    depends_on:
+      - mongo
+      - redis
+      - api
+    command: celery -A tasks.worker worker --loglevel=info
+
+  # Celery beat for scheduled tasks
+  beat:
+    build: .
+    container_name: lease-exit-beat
+    volumes:
+      - .:/app
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/lease_exit_system
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ENV=development
+    depends_on:
+      - mongo
+      - redis
+      - worker
+    command: celery -A tasks.worker beat --loglevel=info
+
+  # Flower for monitoring Celery tasks
+  flower:
+    build: .
+    container_name: lease-exit-flower
+    ports:
+      - "5555:5555"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/lease_exit_system
+      - REDIS_URL=redis://redis:6379/0
+      - ENV=development
+    depends_on:
+      - redis
+      - worker
+    command: celery -A tasks.worker flower --port=5555
+
+volumes:
+  mongo_data:
+  redis_data: 

@@ -17,7 +17,8 @@ python-multipart>=0.0.6
 crewai==0.75
 crewai-tools==0.12.1
 langchain>=0.0.350
-openai>=1.3.7
+anthropic>=0.8.0  # Added Anthropic's official Python client
+openai>=1.12.0    # Keep OpenAI as fallback
 
 # Email
 aiosmtplib>=2.0.2

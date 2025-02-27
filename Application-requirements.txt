@@ -1,0 +1,154 @@
+I am planning this agentic AI application using Crew AI as a framework to build this workflow management system and persist the results in some Mongodb database. We also need to build a interface for user to interact with AI agent and see the progress of the workflow and results. 
+
+So I am giving you all the rough requirements I have recieved from product team, so your task is to give me detailed functional requirement document that I can use as a promp to Replit or Cursor code generation Agents to build this application for me. 
+
+here are the requirements: 
+
+populate data that can be used with the previously given schema that will generate a workflow for Lease Exit process: 
+The workflow will consist of the following
+1.    Lease Exit Management Team will fill out an initial form, selecting the lease for exit and providing initial details for exiting the lease
+2.    Upon submitting the form, a notification will go out to Advisory, IFM, Legal
+3.    Advisory will visit the instance of the lease exit and fill out a Lease Requirements & Cost Information form with the ability to upload documents
+4.    Upon submitting the form, a notification will go out to Legal, IFM, Accounting
+5.    IFM will visit the instance of the lease exit and fill out Exit Requirements Scope form
+6.    Upon submitting the form, a notification will go out to MAC
+7.    MAC will visit the instance of the lease exit and fill out Exit Requirements Scope form
+8.    Upon submitting the form, a notification will go out to PJM
+9.    PJM will visit the instance of the lease exit and fill out Exit Requirements Scope form
+10.     Upon submitting the form, a notification will go out to Lease Exit Management Team
+11.     Lease Exit Management Team will review all the details input for the specific lease exit instance, mark the lease exit as Ready for Approval
+12.     Upon marking, an Approval process will trigger and require stakeholders to provide an Approve or Reject decisions
+13.     If everyone in the chain approves, then mark the lease exit instance as Ready for Lease Exit and send a notification to Lease Exit Management Team
+14.     If anyone rejects, mark the lease exit instance as Review Needed, and send a notification to the Lease Exit Management Team to revise and send for approval again
+
+———
+
+project will focus on developing an Workflow or Events Management application framework. This framework will support dynamic workflows, forms, detail screens, approvals, and notifications. By leveraging an Al chatbot, we aim to populate data for these dynamic elements, giving users the sense that they are creating an application through Al prompts.
+Why pursue this idea? We already have the expertise to build schemas that support these dynamic components, and we typically design them to be reusable across various business cases. Traditionally, this process requires a team to ingest requirements and translate them into data sets within the dynamic framework. However, with the recent advancements in the Artificial Intelligence, we propose replacing this team with an AI Agents. This will empower businesses to construct their own applications or allow a single person from the product/development side to handle the task.
+Benefits of our approach:
+*   A centralized application that caters to multiple business cases within CBRE.
+*   Significantly faster application builds.
+*   Reduced resource needs.
+Challenges we might face:
+• Ensuring the accuracy and consistency of Al data constructions.
+—————
+
+Detailed requirements:
+
+Background
+This is the first of the client events that should trigger activities across multiple service lines.
+More of these are expected to follow, including but not limited to:
+*   Lease Renewal
+*   New Lease
+*   Building Acquisition
+*   Building Sale
+Current process overview: 
+
+Changes are usually driven when:
+The client decides that they will be exiting the lease on a given location.
+
+The required process is for MVP version, trigger to scoping to sign off, notify and stop.
+
+1. Notice of Lease Exit is received. This could come to any one of: Advisory, Portfolio Services, Facility Manager (FM) or Project Manager (PJM).
+	a. Which ever party receives notice, completes the common entry form,  What fields should go in form is either decided upfront by standard schema or user will prompt to AI Agent as input.
+	b. This creates a case in flow
+  		- Notification #1 to Advisory
+		- Notification #2 to IFM
+		- Notification #3 to Legal
+
+2. Advisory receive notice of lease exit, and:
+a.Upload
+	i. Lease Requirements & Cost information
+		- Is MAC is required or is this covered by the client?
+		- Unconsumed TIA
+	ii. Lease Punchlist document iii. Settlement document
+		- Validate: it's okay to have docs uploaded
+- Notification #4 to Legal of information
+- Notification #5 to IFM of information
+- Notification #6 to Accounting of information
+
+3. IFM receive notification of exit
+	a. Complete scoping for exit requirements & upload
+		i. Assumption to validate: there is no consistent central system we can pull this from.
+		ii. Assumption that the scoping data is entered into Flow, rather than
+documented separately and uploaded.
+
+	b. Decision: Information required from Advisory/Portfolio Services?
+		i. Yes: Request information & send notification 
+		ii. No: go to c.
+	c. Decision: PJM or MAC required?
+		i. Yes: Upload scoping request & send notification #7,#8 
+		ii. No: go to 6.
+
+4. MAC receives notification
+a. Complete scoping
+b. Decision: how will costs be approved:
+	i. Directly- go to c
+	ii. Via IFM - upload scoping information and costs, notification #9 to IFM 
+	ill. Via PJM - upload scoping information and costs, notification #10 to PJM
+c. MAC document scope and costs
+	i. Get client sign off via Approval process 
+	ii. Optional: Notification #11 to PJM  	iii. Optional: Notification #12 to MAC
+
+5. PIM complete scoping and costs & upload
+a. Complete scoping
+	i. Create project plan
+	ii. Confirm what documentation is required
+b. Decision: How will costs be approved?
+	i. Directly - go to c.
+	ii. Via IFM - upload scoping information and costs, notification #13 to IFM
+c. PJM document scope and costs
+	i. Include MAC & IFM costs if applicable 
+	ii. Get client sign off via Approval process 
+	iii. Optional: Notification #14 to IFM 
+	iv. Optional: Notification #15 to MAC
+
+6. IFM complete scoping and costs & upload
+a. Complete scoping
+	i. Create demobilisation checklist 
+	ii. Confirm what documentation is required
+b. Decision: How will costs be approved?
+	i. Directly - go to c
+	ii. Via PJM - upload scoping information and costs, notification #16 to PJM
+c. IFM document scope and costs
+	i. Include MAC & IFM costs if applicable 
+	ii. Get client sign off via Approval process 
+	iii. Optional: Notification #17 to IFM
+	iv. Optional: Notification #18 to MAC
+
+7. Scoping and costs submitted for approval
+a. Decision: approve or reject
+	i. Approve: Notification 19 to all parties to move to execution 
+	ii. Reject return to step n with feedback
+
+Process Variation & Addition - 
+There are a number of other paths through the Lease Exit process - for example, PJM child projects may initiate a lease exit (for example, where they have a new build or remodelling project that. means another site will be cleared, they then drive IFM to make changes, a scenario in which they are proactive not reactive.
+However - for the purposes of the MVP, we will develop a single Happy Path through the process, with the aim of rapidly iterating to accommodate other paths in future.
+
+Additional Required Functionality - 
+1. Overview of all lease exits in progress for my clieh
+2. Lease Exit details
+	a. Includes key dates, stats and decisions 
+	b.View documents by workstream & process stage
+	c. Task completion moves on status
+	d. Task completion triggers specified notifications
+	e. Key fields can be update outside of this
+		i. Who by?
+		ii. Notify all when that happens of Dates?
+3. My Tasks
+*    List of tasks open to me
+*    Drill to detail of task/action window
+4. New Lease Exit form
+	a. Users can initiate a new Lease Exit
+5. Scoping forms
+*    For each Service Line
+*    Detailed requirements TBC
+6. Document upload
+	a. Documents should be available to view or download
+7. Notifications
+a. At key points to workstream mailboxes, which will vary by client. Estimated 19 of these 
+	i.What should the text of the notification be? 
+	ii.Confirm if escalation is required, but assume yes to begin with. 	ii.What should the contact be for each of the notifications? Assume shared 	mailboxes, but could be named individuals. Will vary be account.
+b. Whenever key data points change
+ - Check which - definitely dates, anything else?
+c. To the client - check if this should be manual/include an editor function/include an internal approval process?

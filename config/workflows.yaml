@@ -1,0 +1,200 @@
+# Workflow Configuration
+
+leaseexitflow:
+  name: "Lease Exit Workflow"
+  description: "Workflow for managing lease exit processes"
+  steps:
+    - id: "initiate_lease_exit"
+      name: "Initiate Lease Exit"
+      description: "Initial form submission by Lease Exit Management Team"
+      agent: "form_creation_expert"
+      next_steps: ["notify_stakeholders"]
+      
+    - id: "notify_stakeholders"
+      name: "Notify Stakeholders"
+      description: "Send notifications to Advisory, IFM, Legal"
+      agent: "approval_process_architect"
+      next_steps: ["process_advisory_review", "process_ifm_review", "process_legal_review"]
+      
+    - id: "process_advisory_review"
+      name: "Process Advisory Review"
+      description: "Handle Advisory department review"
+      agent: "form_creation_expert"
+      next_steps: ["notify_next_stakeholders"]
+      
+    - id: "notify_next_stakeholders"
+      name: "Notify Next Stakeholders"
+      description: "Notify next stakeholders after Advisory review"
+      agent: "approval_process_architect"
+      next_steps: []
+      
+    - id: "process_ifm_review"
+      name: "Process IFM Review"
+      description: "Handle IFM department review"
+      agent: "form_creation_expert"
+      next_steps: ["notify_mac"]
+      
+    - id: "notify_mac"
+      name: "Notify MAC"
+      description: "Notify MAC after IFM review"
+      agent: "approval_process_architect"
+      next_steps: ["process_mac_review"]
+      
+    - id: "process_mac_review"
+      name: "Process MAC Review"
+      description: "Handle MAC review"
+      agent: "form_creation_expert"
+      next_steps: ["notify_pjm"]
+      
+    - id: "notify_pjm"
+      name: "Notify PJM"
+      description: "Notify PJM after MAC review"
+      agent: "approval_process_architect"
+      next_steps: ["process_pjm_review"]
+      
+    - id: "process_pjm_review"
+      name: "Process PJM Review"
+      description: "Handle PJM review"
+      agent: "form_creation_expert"
+      next_steps: ["notify_management_team"]
+      
+    - id: "notify_management_team"
+      name: "Notify Management Team"
+      description: "Notify Lease Exit Management Team for final review"
+      agent: "approval_process_architect"
+      next_steps: ["trigger_approval_process"]
+      
+    - id: "trigger_approval_process"
+      name: "Trigger Approval Process"
+      description: "Trigger final approval process"
+      agent: "approval_process_architect"
+      next_steps: ["finalize_lease_exit", "handle_rejection"]
+      router_field: "status"
+      router_values:
+        "approved": "finalize_lease_exit"
+        "rejected": "handle_rejection"
+      
+    - id: "finalize_lease_exit"
+      name: "Finalize Lease Exit"
+      description: "Handle approved lease exit"
+      agent: "workflow_design_specialist"
+      next_steps: []
+      
+    - id: "handle_rejection"
+      name: "Handle Rejection"
+      description: "Handle rejected lease exit"
+      agent: "workflow_design_specialist"
+      next_steps: []
+
+  forms:
+    - id: "initial_form"
+      name: "Initial Lease Exit Form"
+      description: "Form for initiating a lease exit"
+      required_fields:
+        - "lease_id"
+        - "property_address"
+        - "exit_date"
+        - "reason_for_exit"
+      optional_fields:
+        - "additional_notes"
+        - "attachments"
+      role: "lease_exit_management"
+      
+    - id: "advisory_form"
+      name: "Advisory Review Form"
+      description: "Form for Advisory team review"
+      required_fields:
+        - "lease_requirements"
+        - "cost_information"
+        - "documents"
+      optional_fields:
+        - "comments"
+      role: "advisory"
+      
+    - id: "ifm_form"
+      name: "IFM Review Form"
+      description: "Form for IFM team review"
+      required_fields:
+        - "exit_requirements"
+        - "scope_details"
+        - "timeline"
+      optional_fields:
+        - "comments"
+        - "documents"
+      role: "ifm"
+      
+    - id: "mac_form"
+      name: "MAC Review Form"
+      description: "Form for MAC team review"
+      required_fields:
+        - "scope_details"
+        - "cost_estimate"
+      optional_fields:
+        - "timeline"
+        - "documents"
+        - "comments"
+      role: "mac"
+      
+    - id: "pjm_form"
+      name: "PJM Review Form"
+      description: "Form for PJM team review"
+      required_fields:
+        - "scope_details"
+        - "project_plan"
+        - "cost_estimate"
+        - "timeline"
+      optional_fields:
+        - "documents"
+        - "comments"
+      role: "pjm"
+      
+    - id: "approval_form"
+      name: "Approval Form"
+      description: "Form for approving a lease exit"
+      required_fields:
+        - "approver_id"
+        - "decision"
+      optional_fields:
+        - "comments"
+      role: "any"
+
+  notifications:
+    - id: "initial_submission"
+      name: "Initial Submission Notification"
+      description: "Notification for initial lease exit submission"
+      recipients: ["advisory", "ifm", "legal"]
+      
+    - id: "advisory_review_complete"
+      name: "Advisory Review Complete Notification"
+      description: "Notification for completed Advisory review"
+      recipients: ["legal", "ifm", "accounting"]
+      
+    - id: "ifm_review_complete"
+      name: "IFM Review Complete Notification"
+      description: "Notification for completed IFM review"
+      recipients: ["mac"]
+      
+    - id: "mac_review_complete"
+      name: "MAC Review Complete Notification"
+      description: "Notification for completed MAC review"
+      recipients: ["pjm"]
+      
+    - id: "pjm_review_complete"
+      name: "PJM Review Complete Notification"
+      description: "Notification for completed PJM review"
+      recipients: ["lease_exit_management"]
+      
+    - id: "approval_request"
+      name: "Approval Request Notification"
+      description: "Notification for approval request"
+      recipients: ["advisory", "ifm", "legal", "lease_exit_management"]
+      
+    - id: "approval_complete"
+      name: "Approval Complete Notification"
+      description: "Notification for completed approval"
+      recipients: ["lease_exit_management", "advisory", "ifm", "legal", "accounting", "mac", "pjm"]
+      
+    - id: "approval_rejected"
+      name: "Approval Rejected Notification"
+      description: "Notification for rejected approval"
+      recipients: ["lease_exit_management"]

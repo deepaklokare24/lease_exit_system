@@ -1,29 +1,82 @@
-workflow_design_specialist:
-  role: Workflow Design Specialist
-  goal: Create dynamic and adaptable workflows based on user input and CBRE's business needs
-  backstory: Expert in understanding user requirements and translating them into efficient workflows
-  verbose: true
-  allow_delegation: false
-  tools:
-    - SerperDevTool
-    - DatabaseTool
+# Lease Exit System Agent Configuration
+# This file defines the configuration for all agents in the system
 
-form_creation_expert:
-  role: Form Creation Expert
-  goal: Generate custom forms tailored to workflow requirements
-  backstory: Specialist in designing user-friendly forms for data capture
-  verbose: true
-  allow_delegation: false
-  tools:
-    - FormValidationTool
-    - DatabaseTool
+# AI Model Configuration
+ai_models:
+  default: "anthropic/claude-3-sonnet-20240229"
+  form_creator: "anthropic/claude-3-sonnet-20240229"
+  workflow_designer: "anthropic/claude-3-sonnet-20240229"
+  approval_architect: "anthropic/claude-3-sonnet-20240229"
+  notification_specialist: "anthropic/claude-3-sonnet-20240229"
 
-approval_process_architect:
-  role: Approval Process Architect
-  goal: Design compliant approval processes
-  backstory: Expert in creating robust approval mechanisms
-  verbose: true
-  allow_delegation: false
-  tools:
-    - ApprovalWorkflowTool
-    - NotificationTool
+# Agent Configuration
+agents:
+  workflow_designer:
+    name: "Workflow Designer Agent"
+    description: "Designs and optimizes lease exit workflows"
+    class: "agents.workflow_designer.WorkflowDesignerAgent"
+    model: ${ai_models.workflow_designer}
+    tools:
+      - "tools.workflow_tool.WorkflowTool"
+      - "tools.database_tool.DatabaseTool"
+    parameters:
+      max_workflow_steps: 15
+      use_advanced_optimization: true
+    
+  form_creator:
+    name: "Form Creator Agent"
+    description: "Creates and manages dynamic forms based on lease exit context"
+    class: "agents.form_creator.FormCreatorAgent"
+    model: ${ai_models.form_creator}
+    tools:
+      - "tools.form_tool.FormTool"
+      - "tools.database_tool.DatabaseTool"
+    parameters:
+      default_field_types:
+        - text
+        - number
+        - date
+        - select
+        - checkbox
+        - textarea
+        - file
+      validation_enabled: true
+    
+  approval_architect:
+    name: "Approval Architect Agent"
+    description: "Designs and manages approval processes for lease exits"
+    class: "agents.approval_architect.ApprovalArchitectAgent"
+    model: ${ai_models.approval_architect}
+    tools:
+      - "tools.approval_tool.ApprovalTool"
+      - "tools.database_tool.DatabaseTool"
+    parameters:
+      max_approvers_per_step: 3
+      parallel_approvals_enabled: true
+      default_approval_timeout_days: 5
+    
+  notification_specialist:
+    name: "Notification Specialist Agent"
+    description: "Manages notifications and communications for all stakeholders"
+    class: "agents.notification_specialist.NotificationSpecialistAgent"
+    model: ${ai_models.notification_specialist}
+    tools:
+      - "tools.notification_tool.NotificationTool"
+      - "tools.database_tool.DatabaseTool"
+      - "tools.email_tool.EmailTool"
+    parameters:
+      notification_channels:
+        - email
+        - in_app
+        - sms
+      email_templates_enabled: true
+      notification_batching: true
+      max_notifications_per_day: 10
+
+# Role Mappings
+# Maps agent IDs to roles for easier reference in workflows
+role_mappings:
+  workflow_management: "workflow_designer"
+  form_management: "form_creator"
+  approval_management: "approval_architect"
+  notification_management: "notification_specialist"
