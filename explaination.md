@@ -137,6 +137,51 @@ Benefits of using Redis with Celery:
 - **Scalability**: Can handle a high volume of tasks
 - **Simplicity**: Easy to set up and maintain compared to other message brokers
 
+### Installing and Configuring Celery on macOS
+
+Setting up Celery and Redis on macOS requires a few specific steps:
+
+1. **Install Redis using Homebrew**:
+   ```bash
+   brew install redis
+   ```
+
+2. **Start Redis as a service**:
+   ```bash
+   brew services start redis
+   ```
+   This will ensure Redis starts automatically when your system boots.
+
+3. **Verify Redis is running**:
+   ```bash
+   redis-cli ping
+   ```
+   You should receive a "PONG" response if Redis is running correctly.
+
+4. **Install Celery and Flower**:
+   ```bash
+   pip install celery flower
+   ```
+   Flower is a web-based tool for monitoring Celery tasks.
+
+5. **Configure permissions** (if needed):
+   ```bash
+   # Create a celery user group
+   sudo dscl . -create /Groups/celery
+   sudo dscl . -create /Groups/celery PrimaryGroupID 1000
+   
+   # Add your user to the celery group
+   sudo dscl . -append /Groups/celery GroupMembership $(whoami)
+   ```
+
+6. **Configure environment variables**:
+   Ensure your `.env` file contains the correct Redis URLs:
+   ```
+   REDIS_URL=redis://localhost:6379/0
+   CELERY_BROKER_URL=redis://localhost:6379/0
+   CELERY_RESULT_BACKEND=redis://localhost:6379/0
+   ```
+
 ### Celery Flower: Monitoring and Management
 
 Celery Flower is a web-based tool for monitoring and administering Celery clusters. In our Lease Exit System, Flower provides real-time visibility into task execution, which is especially valuable for tracking the complex, multi-step workflows managed by our AI agents.
@@ -343,6 +388,38 @@ uvicorn main:app --reload
 # Terminal 5: Start React frontend
 cd frontend && npm start
 ```
+
+### Troubleshooting Celery on macOS
+
+If you encounter issues with Celery on macOS, here are some common problems and solutions:
+
+1. **Celery worker not starting**:
+   - Check if Redis is running: `redis-cli ping` (should return PONG)
+   - Verify your Redis URL in .env file
+   - Try running with debug logging: `python start_worker.py --loglevel=debug`
+   - Check for any error messages in the terminal output
+
+2. **Permission issues**:
+   - Ensure your user has appropriate permissions
+   - Try running in a virtual environment
+   - Check if the celery user group is properly set up (see installation steps)
+
+3. **Redis connection issues**:
+   - Verify Redis is running: `brew services list | grep redis`
+   - Check Redis logs: `tail -f /usr/local/var/log/redis.log`
+   - Restart Redis: `brew services restart redis`
+   - Try connecting manually: `redis-cli`
+
+4. **Module not found errors**:
+   - Ensure all dependencies are installed: `pip install -r requirements.txt`
+   - Check if you're using the correct virtual environment
+   - Verify the module path in your import statements
+
+5. **Celery tasks not being executed**:
+   - Check if the worker is running and listening for tasks
+   - Verify that the task is properly registered with Celery
+   - Check for any error messages in the worker logs
+   - Try restarting the worker
 
 ### Step 5: Using the Application
 

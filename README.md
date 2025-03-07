@@ -111,6 +111,30 @@ The Lease Exit System automates the complex process of exiting leases, managing 
    redis-server
    ```
 
+### Installing and Configuring Celery on macOS
+
+1. Celery should already be installed as part of the requirements.txt, but you can install it separately if needed:
+   ```bash
+   pip install celery
+   ```
+
+2. Install Flower for monitoring Celery tasks:
+   ```bash
+   pip install flower
+   ```
+
+3. If you encounter permissions issues with Celery on macOS, you may need to:
+   ```bash
+   # Create a celery user group (if it doesn't exist)
+   sudo dscl . -create /Groups/celery
+   sudo dscl . -create /Groups/celery PrimaryGroupID 1000
+   
+   # Add your user to the celery group
+   sudo dscl . -append /Groups/celery GroupMembership $(whoami)
+   ```
+
+4. If you encounter issues with Celery not finding the Redis socket, ensure Redis is running and check your Redis URL in the .env file.
+
 ### Running the Backend
 
 1. Start MongoDB (if not running already):
@@ -192,6 +216,22 @@ uvicorn main:app --reload
 # Terminal 5: Start React frontend
 cd frontend && npm start
 ```
+
+### Troubleshooting Celery on macOS
+
+1. **Celery worker not starting**:
+   - Check if Redis is running: `redis-cli ping` (should return PONG)
+   - Verify your Redis URL in .env file
+   - Try running with debug logging: `python start_worker.py --loglevel=debug`
+
+2. **Permission issues**:
+   - Ensure your user has appropriate permissions
+   - Try running in a virtual environment
+
+3. **Redis connection issues**:
+   - Verify Redis is running: `brew services list | grep redis`
+   - Check Redis logs: `tail -f /usr/local/var/log/redis.log`
+   - Restart Redis: `brew services restart redis`
 
 ### Docker Setup (Alternative)
 

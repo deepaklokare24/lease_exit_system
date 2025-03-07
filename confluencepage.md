@@ -17,8 +17,10 @@
    - [Prerequisites](#prerequisites)
    - [Environment Setup](#environment-setup)
    - [Installing Redis on macOS](#installing-redis-on-macos)
+   - [Installing and Configuring Celery on macOS](#installing-and-configuring-celery-on-macos)
    - [Running Locally](#running-locally)
    - [Quick Start Commands](#quick-start-commands)
+   - [Troubleshooting Celery on macOS](#troubleshooting-celery-on-macos)
    - [Running with Docker](#running-with-docker)
 6. [API Documentation](#api-documentation)
 7. [AI Agent System](#ai-agent-system)
@@ -280,7 +282,7 @@ To run the Lease Exit System, you need the following prerequisites:
    ```
 
 5. Configure your `.env` file with the following variables:
-   ```
+   ```bash
    # Database Configuration
    MONGODB_URI=mongodb://localhost:27017/lease_exit_system
 
@@ -325,6 +327,42 @@ Redis is required for the Celery task queue. Here's how to install and run it on
    redis-cli ping
    ```
    You should receive a "PONG" response.
+
+### Installing and Configuring Celery on macOS
+
+Celery is a distributed task queue system used for handling background tasks in the Lease Exit System. Here's how to set it up on macOS:
+
+1. Celery should already be installed as part of the requirements.txt, but you can install it separately if needed:
+   ```bash
+   pip install celery
+   ```
+
+2. Install Flower for monitoring Celery tasks:
+   ```bash
+   pip install flower
+   ```
+
+3. If you encounter permissions issues with Celery on macOS, you may need to create a celery user group:
+   ```bash
+   # Create a celery user group (if it doesn't exist)
+   sudo dscl . -create /Groups/celery
+   sudo dscl . -create /Groups/celery PrimaryGroupID 1000
+   
+   # Add your user to the celery group
+   sudo dscl . -append /Groups/celery GroupMembership $(whoami)
+   ```
+
+4. Configure Celery to work with Redis by ensuring your `.env` file contains the correct Redis URLs:
+   ```
+   REDIS_URL=redis://localhost:6379/0
+   CELERY_BROKER_URL=redis://localhost:6379/0
+   CELERY_RESULT_BACKEND=redis://localhost:6379/0
+   ```
+
+5. If you're using a virtual environment, make sure Celery is using the correct Python interpreter:
+   ```bash
+   which python  # Verify the path to your virtual environment's Python
+   ```
 
 ### Running Locally
 
@@ -402,6 +440,38 @@ uvicorn main:app --reload
 # Terminal 5: Start React frontend
 cd frontend && npm start
 ```
+
+### Troubleshooting Celery on macOS
+
+If you encounter issues with Celery on macOS, here are some common problems and solutions:
+
+1. **Celery worker not starting**:
+   - Check if Redis is running: `redis-cli ping` (should return PONG)
+   - Verify your Redis URL in .env file
+   - Try running with debug logging: `python start_worker.py --loglevel=debug`
+   - Check for any error messages in the terminal output
+
+2. **Permission issues**:
+   - Ensure your user has appropriate permissions
+   - Try running in a virtual environment
+   - Check if the celery user group is properly set up (see installation steps)
+
+3. **Redis connection issues**:
+   - Verify Redis is running: `brew services list | grep redis`
+   - Check Redis logs: `tail -f /usr/local/var/log/redis.log`
+   - Restart Redis: `brew services restart redis`
+   - Try connecting manually: `redis-cli`
+
+4. **Module not found errors**:
+   - Ensure all dependencies are installed: `pip install -r requirements.txt`
+   - Check if you're using the correct virtual environment
+   - Verify the module path in your import statements
+
+5. **Celery tasks not being executed**:
+   - Check if the worker is running and listening for tasks
+   - Verify that the task is properly registered with Celery
+   - Check for any error messages in the worker logs
+   - Try restarting the worker
 
 ### Running with Docker
 
