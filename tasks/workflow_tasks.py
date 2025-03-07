@@ -177,3 +177,27 @@ class WorkflowTasks:
                 "success": False,
                 "message": f"Error initiating lease exit: {str(e)}"
             }
+
+    async def get_lease_exits_with_pending_approvals(self) -> List[Dict[str, Any]]:
+        """Get all lease exits with pending approvals
+        
+        Returns:
+            List[Dict[str, Any]]: List of lease exits with pending approvals
+        """
+        # Query the database for lease exits with pending approvals
+        lease_exits = await self.db_tool.get_lease_exit.find_lease_exits(
+            {"approval_chain.status": "pending"}
+        )
+        return lease_exits
+
+    async def get_active_lease_exits(self) -> List[Dict[str, Any]]:
+        """Get all active lease exits
+        
+        Returns:
+            List[Dict[str, Any]]: List of active lease exits
+        """
+        # Query the database for active lease exits (not completed or cancelled)
+        lease_exits = await self.db_tool.get_lease_exit.find_lease_exits(
+            {"status": {"$nin": ["completed", "cancelled"]}}
+        )
+        return lease_exits

@@ -44,61 +44,207 @@ The Lease Exit System automates the complex process of exiting leases, managing 
 - Python 3.9+
 - Node.js 16+
 - MongoDB
-- Redis
+- Redis (for Celery task queue)
+- OpenAI API key (for AI agents)
 
-### Backend Setup
+### Environment Setup
 
 1. Clone the repository:
-   ```
+   ```bash
    git clone https://github.com/yourusername/lease-exit-system.git
    cd lease-exit-system
    ```
 
 2. Create and activate a virtual environment:
-   ```
+   ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
 3. Install dependencies:
-   ```
+   ```bash
    pip install -r requirements.txt
    ```
 
 4. Set up environment variables:
-   ```
+   ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
-5. Run the application:
+5. Configure your `.env` file with the following variables:
    ```
+   # Database Configuration
+   MONGODB_URI=mongodb://localhost:27017/lease_exit_system
+
+   # OpenAI Configuration
+   OPENAI_API_KEY=your-openai-api-key
+   OPENAI_MODEL=gpt-4
+
+   # Email Configuration
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USERNAME=your-email@gmail.com
+   SMTP_PASSWORD=your-app-specific-password
+   FROM_EMAIL=your-email@gmail.com
+
+   # Redis/Celery Configuration
+   REDIS_URL=redis://localhost:6379/0
+   CELERY_BROKER_URL=redis://localhost:6379/0
+   CELERY_RESULT_BACKEND=redis://localhost:6379/0
+   ```
+
+### Installing Redis on macOS
+
+1. Install Redis using Homebrew:
+   ```bash
+   brew install redis
+   ```
+
+2. Start Redis as a service (optional):
+   ```bash
+   brew services start redis
+   ```
+
+3. Alternatively, start Redis manually:
+   ```bash
+   redis-server
+   ```
+
+### Running the Backend
+
+1. Start MongoDB (if not running already):
+   ```bash
+   # Using Docker
+   docker run -d -p 27017:27017 --name mongodb mongo:5.0
+   ```
+
+2. Reset and seed the database with initial data:
+   ```bash
+   # Run the database seeding script
+   python reset_and_seed_db.py
+   ```
+   This will populate the database with:
+   - Form templates required by the frontend
+   - Sample users with different roles
+   - A sample lease exit record
+
+3. Start Redis (if not started already):
+   ```bash
+   redis-server
+   ```
+
+4. Start Celery worker using the simplified script:
+   ```bash
+   python start_worker.py
+   ```
+
+5. Start Celery Flower (optional, for monitoring):
+   ```bash
+   celery -A celery_app flower --port=5555
+   ```
+
+6. Run the FastAPI application:
+   ```bash
    uvicorn main:app --reload
    ```
 
-### Frontend Setup
+   The API will be available at: http://localhost:8000  
+   API Documentation: http://localhost:8000/docs  
+   Celery Flower Dashboard: http://localhost:5555
+
+### Running the Frontend
 
 1. Navigate to the frontend directory:
-   ```
+   ```bash
    cd frontend
    ```
 
 2. Install dependencies:
-   ```
+   ```bash
    npm install
    ```
 
 3. Start the development server:
-   ```
+   ```bash
    npm start
    ```
 
-## Usage
+   The frontend will be available at: http://localhost:3000
 
-1. Access the application at `http://localhost:3000`
-2. Log in with your credentials
-3. Create a new lease exit request
-4. Follow the guided workflow to complete the process
+### Quick Start Commands
+
+For convenience, here are the commands to start all services in separate terminals:
+
+```bash
+# Terminal 1: Start Redis
+redis-server
+
+# Terminal 2: Start Celery worker
+python start_worker.py
+
+# Terminal 3: Start Celery Flower (optional)
+celery -A celery_app flower --port=5555
+
+# Terminal 4: Start FastAPI backend
+uvicorn main:app --reload
+
+# Terminal 5: Start React frontend
+cd frontend && npm start
+```
+
+### Docker Setup (Alternative)
+
+For a simplified setup using Docker:
+
+1. Make sure Docker and Docker Compose are installed
+2. Configure your `.env` file
+3. Start all services:
+   ```bash
+   docker-compose up -d
+   ```
+4. Access the application at http://localhost:3000
+
+## Database Initialization
+
+The application requires certain data to be present in the database to function properly. The `reset_and_seed_db.py` script is provided to initialize the database with:
+
+1. **Form Templates**: Required by the frontend to render dynamic forms
+2. **Sample Users**: Users with different stakeholder roles (Lease Exit Management, Advisory, IFM)
+3. **Sample Lease Exit**: A test lease exit record to demonstrate the application functionality
+
+To run the database seeding script:
+```bash
+python reset_and_seed_db.py
+```
+
+This script is idempotent - it will only create the necessary data if it doesn't already exist, making it safe to run multiple times.
+
+## Using the Application
+
+1. **Create a New Lease Exit**:
+   - Navigate to http://localhost:3000
+   - Click "New Lease Exit" button
+   - Fill out the lease exit form with required details
+   - Submit the form
+
+2. **View Lease Exits**:
+   - The dashboard displays all lease exits with their status
+   - Click "View" to see details of a specific lease exit
+
+3. **Process Approvals**:
+   - Navigate to the Approvals page
+   - Review pending approvals
+   - Submit approval decisions
+
+4. **View Notifications**:
+   - Navigate to the Notifications page
+   - View and manage notifications
+
+5. **Monitor Background Tasks**:
+   - Navigate to http://localhost:5555 for Celery Flower
+   - Monitor task execution and worker status
+   - View real-time metrics on task processing
 
 ## Development
 
@@ -117,7 +263,7 @@ The Lease Exit System automates the complex process of exiting leases, managing 
 ## Testing
 
 Run tests using pytest:
-```
+```bash
 pytest
 ```
 

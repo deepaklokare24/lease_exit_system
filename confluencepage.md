@@ -1,35 +1,3 @@
- <think>
-The request asks me to explain this application in detail, including its control flow and how to run it step by step. I need to create a comprehensive technical documentation in markdown format that's compatible with Confluence. Let me analyze the application components and structure first.
-
-From the provided files, I can see this is the Lease Exit System application, which manages lease exit workflows using AI agents (Crew AI framework). The application consists of:
-
-1. Backend (FastAPI)
-2. Frontend (React)
-3. Database (MongoDB)
-4. Message queue (Redis/Celery)
-5. AI agents for different roles (workflow designer, form creator, approval architect, notification specialist)
-
-Let me outline the key components:
-
-1. Main app entry points: main.py and api/server.py
-2. Database: MongoDB via motor_asyncio (async driver)
-3. AI Agent framework: Crew AI with specialized agents
-4. Workflows: Lease exit process management
-5. Forms: Dynamic form generation and validation
-6. Notifications: Email and in-app notifications
-7. Approvals: Structured approval workflows
-8. Containerization: Docker and docker-compose setup
-
-I'll create a detailed markdown document that explains:
-1. Overview of the application
-2. Architecture and components
-3. Control flow between components
-4. Step-by-step setup and execution guide
-5. Details about each module and how they interact
-
-This will provide a comprehensive understanding of the application and how to run it.
-</think>
-
 # Lease Exit System - Technical Documentation
 
 ## Table of Contents
@@ -48,8 +16,10 @@ This will provide a comprehensive understanding of the application and how to ru
 5. [Installation & Setup](#installation--setup)
    - [Prerequisites](#prerequisites)
    - [Environment Setup](#environment-setup)
-   - [Running with Docker](#running-with-docker)
+   - [Installing Redis on macOS](#installing-redis-on-macos)
    - [Running Locally](#running-locally)
+   - [Quick Start Commands](#quick-start-commands)
+   - [Running with Docker](#running-with-docker)
 6. [API Documentation](#api-documentation)
 7. [AI Agent System](#ai-agent-system)
    - [Workflow Designer Agent](#workflow-designer-agent)
@@ -116,6 +86,33 @@ MongoDB is used as the primary database, with the following collections:
 - **forms**: Form templates and submissions
 - **notifications**: Notification records and delivery status
 - **documents**: Metadata about uploaded documents
+
+### Database Initialization
+
+The system requires specific data to be present in the database for proper functionality. The `seed_db.py` script is provided to initialize the MongoDB collections with essential data:
+
+#### Form Templates
+The script creates form templates in the `form_templates` collection, which are used by the frontend to dynamically render forms. These include:
+
+1. **Initial Form**: Used when creating a new lease exit, with fields for lease ID, property address, exit date, and reason for exit.
+2. **Advisory Form**: Used by the Advisory department, with fields for lease requirements, cost information, and document uploads.
+3. **IFM Form**: Used by the IFM department, with fields for exit requirements, scope details, and timeline.
+
+#### Sample Users
+The script creates sample users in the `users` collection with different stakeholder roles:
+
+1. **Lease Exit Management**: Admin user responsible for overseeing the lease exit process.
+2. **Advisory**: User responsible for providing advisory input on lease exits.
+3. **IFM**: User responsible for facility management aspects of lease exits.
+
+#### Sample Lease Exit
+The script creates a sample lease exit record in the `lease_exits` collection to demonstrate the application functionality. This includes:
+
+1. **Basic Information**: Lease ID, property details, and status.
+2. **Approval Chain**: Pending approval steps for different stakeholders.
+3. **Metadata**: Creation timestamps and other metadata.
+
+The seeding script is designed to be idempotent, meaning it can be run multiple times without creating duplicate data. It checks if collections already contain data before inserting new records.
 
 ### AI-Powered Components
 
@@ -249,12 +246,13 @@ The system's AI agents work together to automate different aspects of the workfl
 
 ### Prerequisites
 
-- **Docker and Docker Compose** (recommended for easy setup)
-- **Python 3.9+** (if running locally)
-- **Node.js 16+** (if running frontend locally)
-- **MongoDB** (if not using Docker)
-- **Redis** (if not using Docker)
-- **OpenAI API Key** (for AI agent functionality)
+To run the Lease Exit System, you need the following prerequisites:
+
+- Python 3.9+
+- Node.js 16+
+- MongoDB
+- Redis (for Celery task queue)
+- OpenAI API key (for AI agents)
 
 ### Environment Setup
 
@@ -264,12 +262,24 @@ The system's AI agents work together to automate different aspects of the workfl
    cd lease-exit-system
    ```
 
-2. Create a `.env` file based on the template:
+2. Create and activate a virtual environment:
    ```bash
-   cp .env.example .env
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
-3. Edit the `.env` file to set required variables:
+3. Install Python dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+5. Configure your `.env` file with the following variables:
    ```
    # Database Configuration
    MONGODB_URI=mongodb://localhost:27017/lease_exit_system
@@ -284,58 +294,64 @@ The system's AI agents work together to automate different aspects of the workfl
    SMTP_USERNAME=your-email@gmail.com
    SMTP_PASSWORD=your-app-specific-password
    FROM_EMAIL=your-email@gmail.com
+
+   # Redis/Celery Configuration
+   REDIS_URL=redis://localhost:6379/0
+   CELERY_BROKER_URL=redis://localhost:6379/0
+   CELERY_RESULT_BACKEND=redis://localhost:6379/0
    ```
 
-### Running with Docker
+### Installing Redis on macOS
 
-The simplest way to run the complete system is using Docker Compose:
+Redis is required for the Celery task queue. Here's how to install and run it on macOS:
 
-1. Start all services:
+1. Install Redis using Homebrew:
    ```bash
-   docker-compose up
+   brew install redis
    ```
 
-2. Access the application:
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:8000
-   - API Documentation: http://localhost:8000/docs
-   - Celery Flower (task monitoring): http://localhost:5555
-
-3. To run in the background:
+2. Start Redis as a service (runs in the background):
    ```bash
-   docker-compose up -d
+   brew services start redis
    ```
 
-4. To stop all services:
+3. Alternatively, start Redis manually in a terminal:
    ```bash
-   docker-compose down
+   redis-server
    ```
+
+4. To verify Redis is running:
+   ```bash
+   redis-cli ping
+   ```
+   You should receive a "PONG" response.
 
 ### Running Locally
 
 #### Backend Setup
 
-1. Create a virtual environment:
+1. Reset and seed the database with initial data:
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   python reset_and_seed_db.py
+   ```
+   This will populate the database with:
+   - Form templates required by the frontend
+   - Sample users with different roles
+   - A sample lease exit record
+
+2. Start Redis (if not already running):
+   ```bash
+   redis-server
    ```
 
-2. Install dependencies:
+3. Start Celery worker using the simplified script:
    ```bash
-   pip install -r requirements.txt
+   python start_worker.py
    ```
 
-3. Start MongoDB (if not running already):
+4. Start Celery Flower (optional, for monitoring):
    ```bash
-   # Using Docker
-   docker run -d -p 27017:27017 --name mongodb mongo:5.0
-   ```
-
-4. Start Redis (if not running already):
-   ```bash
-   # Using Docker
-   docker run -d -p 6379:6379 --name redis redis:6.2-alpine
+   celery -A celery_app flower --port=5555
    ```
 
 5. Run the FastAPI application:
@@ -343,15 +359,9 @@ The simplest way to run the complete system is using Docker Compose:
    uvicorn main:app --reload
    ```
 
-6. Start Celery worker for background tasks:
-   ```bash
-   celery -A tasks.worker worker --loglevel=info
-   ```
-
-7. Start Celery beat for scheduled tasks:
-   ```bash
-   celery -A tasks.worker beat --loglevel=info
-   ```
+   The API will be available at: http://localhost:8000  
+   API Documentation: http://localhost:8000/docs  
+   Celery Flower Dashboard: http://localhost:5555
 
 #### Frontend Setup
 
@@ -360,17 +370,50 @@ The simplest way to run the complete system is using Docker Compose:
    cd frontend
    ```
 
-2. Install dependencies:
+2. Install Node.js dependencies:
    ```bash
    npm install
    ```
 
-3. Start the development server:
+3. Start the React development server:
    ```bash
    npm start
    ```
 
-4. Access the frontend at http://localhost:3000
+   The frontend will be available at: http://localhost:3000
+
+### Quick Start Commands
+
+For convenience, here are the commands to start all services in separate terminals:
+
+```bash
+# Terminal 1: Start Redis
+redis-server
+
+# Terminal 2: Start Celery worker
+python start_worker.py
+
+# Terminal 3: Start Celery Flower (optional)
+celery -A celery_app flower --port=5555
+
+# Terminal 4: Start FastAPI backend
+uvicorn main:app --reload
+
+# Terminal 5: Start React frontend
+cd frontend && npm start
+```
+
+### Running with Docker
+
+For a simplified setup using Docker:
+
+1. Make sure Docker and Docker Compose are installed
+2. Configure your `.env` file
+3. Start all services:
+   ```bash
+   docker-compose up -d
+   ```
+4. Access the application at http://localhost:3000
 
 ## API Documentation
 
@@ -538,7 +581,7 @@ If you encounter database connection issues:
 
 2. Verify the MongoDB URI in your `.env` file:
    ```
-   MONGODB_URI=mongodb://localhost:27017/lease_exit_system
+   MONGODB_URI=mongodb+srv://construction_admin:24April@1988@construction-projects.8ekec.mongodb.net/?retryWrites=true&w=majority&appName=construction-projects
    ```
 
 3. If using Docker Compose, check the `mongo` service:

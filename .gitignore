@@ -125,4 +125,21 @@ docs/_build/
 
 # Local development configuration
 docker-compose.override.yml
-.localconfig/ 
+.localconfig/ # Logs - Enhanced
+log/
+*/logs/*
+*/log/*
+# Application specific logs
+lease_exit_system/logs/
+lease_exit_system_logs/
+# Redis - Enhanced
+*.rdb
+appendonly.aof
+# Celery - Enhanced
+celerybeat-schedule.*
+celery_results/
+# MongoDB data directories
+data/db/
+mongodb_data/
+# Flower monitoring data
+flower_db/

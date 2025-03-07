@@ -11,9 +11,9 @@ services:
       - .:/app
       - /app/frontend/node_modules
     environment:
-      - MONGODB_URI=mongodb://mongo:27017/lease_exit_system
+      - MONGODB_URI=mongodb+srv://construction_admin:24April@1988@construction-projects.8ekec.mongodb.net/?retryWrites=true&w=majority&appName=construction-projects
       - REDIS_URL=redis://redis:6379/0
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - ENV=development
     depends_on:
       - mongo
@@ -60,9 +60,9 @@ services:
     volumes:
       - .:/app
     environment:
-      - MONGODB_URI=mongodb://mongo:27017/lease_exit_system
+      - MONGODB_URI=mongodb+srv://construction_admin:24April@1988@construction-projects.8ekec.mongodb.net/?retryWrites=true&w=majority&appName=construction-projects
       - REDIS_URL=redis://redis:6379/0
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - ENV=development
     depends_on:
       - mongo
@@ -77,9 +77,9 @@ services:
     volumes:
       - .:/app
     environment:
-      - MONGODB_URI=mongodb://mongo:27017/lease_exit_system
+      - MONGODB_URI=mongodb+srv://construction_admin:24April@1988@construction-projects.8ekec.mongodb.net/?retryWrites=true&w=majority&appName=construction-projects
       - REDIS_URL=redis://redis:6379/0
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - ENV=development
     depends_on:
       - mongo
@@ -94,7 +94,7 @@ services:
     ports:
       - "5555:5555"
     environment:
-      - MONGODB_URI=mongodb://mongo:27017/lease_exit_system
+      - MONGODB_URI=mongodb+srv://construction_admin:24April@1988@construction-projects.8ekec.mongodb.net/?retryWrites=true&w=majority&appName=construction-projects
       - REDIS_URL=redis://redis:6379/0
       - ENV=development
     depends_on:

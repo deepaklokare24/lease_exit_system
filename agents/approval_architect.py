@@ -30,7 +30,7 @@ class ApprovalArchitectAgent:
             verbose=True,
             allow_delegation=False,
             tools=[self.db_tool, self.notification_tool],
-            llm=os.getenv("AI_MODEL", "anthropic/claude-3-sonnet-20240229")
+            llm=os.getenv("AI_MODEL", "anthropic/claude-3-5-sonnet-20241022")
         )
     
     async def create_approval_chain(self, lease_exit_id: str, required_approvers: List[StakeholderRole]) -> List[ApprovalStep]:

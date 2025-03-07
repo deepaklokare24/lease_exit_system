@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 from enum import Enum
+from bson import ObjectId
 
 class WorkflowStatus(str, Enum):
     DRAFT = "draft"
@@ -27,6 +28,10 @@ class StakeholderRole(str, Enum):
     MAC = "mac"
     PJM = "pjm"
     ACCOUNTING = "accounting"
+    PROPERTY_MANAGER = "property_manager"
+    TENANT = "tenant"
+    LANDLORD = "landlord"
+    MAINTENANCE = "maintenance"
 
 class Document(BaseModel):
     id: str = Field(default_factory=lambda: str(ObjectId()))
@@ -57,13 +62,16 @@ class ApprovalStep(BaseModel):
 class LeaseExit(BaseModel):
     id: str = Field(default_factory=lambda: str(ObjectId()))
     lease_id: str
-    property_details: Dict[str, Any]
+    property_address: str
+    exit_date: str
+    reason_for_exit: str
+    additional_notes: Optional[str] = None
     status: WorkflowStatus = WorkflowStatus.DRAFT
-    current_step: str
+    current_step: str = "initial"
     forms: Dict[str, FormData] = Field(default_factory=dict)
     approval_chain: List[ApprovalStep] = Field(default_factory=list)
     documents: List[Document] = Field(default_factory=list)
-    created_by: str
+    created_by: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     metadata: Dict[str, Any] = Field(default_factory=dict)

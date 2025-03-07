@@ -3,6 +3,7 @@ import yaml
 import logging
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
+import urllib.parse
 
 # Load environment variables
 load_dotenv()
@@ -107,23 +108,32 @@ class Config:
         return os.getenv(key, default)
     
     def get_mongodb_uri(self) -> str:
-        """Get the MongoDB URI
+        """Get the MongoDB URI with properly escaped username and password
         
         Returns:
             The MongoDB URI
         """
-        return self.get_env("MONGODB_URI", "mongodb://localhost:27017/lease_exit_system")
+        # Get the MongoDB URI from environment variables or use default
+        uri = self.get_env("MONGODB_URI")
+        
+        # If URI is provided in environment, return it directly without re-encoding
+        if uri:
+            return uri
+            
+        # Otherwise, construct URI with proper escaping
+        username = urllib.parse.quote_plus("construction_admin")
+        password = urllib.parse.quote_plus("24April@1988")
+        return f"mongodb+srv://{username}:{password}@construction-projects.8ekec.mongodb.net/?retryWrites=true&w=majority&appName=construction-projects"
     
-    def get_openai_config(self) -> Dict[str, str]:
-        """Get the OpenAI configuration
+    def get_redis_url(self) -> str:
+        """Get the Redis URL for Celery broker and result backend
         
         Returns:
-            The OpenAI configuration
+            The Redis URL
         """
-        return {
-            "api_key": self.get_env("OPENAI_API_KEY"),
-            "model": self.get_env("AI_MODEL", "gpt-4o")
-        }
+        # Get the Redis URL from environment variables or use default
+        redis_url = self.get_env("REDIS_URL", "redis://localhost:6379/0")
+        return redis_url
         
     def get_anthropic_config(self) -> Dict[str, str]:
         """Get the Anthropic configuration
@@ -133,7 +143,7 @@ class Config:
         """
         return {
             "api_key": self.get_env("ANTHROPIC_API_KEY"),
-            "model": self.get_env("AI_MODEL", "claude-3-sonnet-20240229")
+            "model": self.get_env("AI_MODEL", "claude-3-5-sonnet-20241022")
         }
     
     def get_smtp_config(self) -> Dict[str, Any]:
@@ -188,6 +198,10 @@ class Config:
             Whether the application is in production mode
         """
         return self.get_env("APP_ENV", "development").lower() == "production"
+    
+    def get_db_name(self):
+        """Get the database name from environment or return default"""
+        return self.get_env("DB_NAME", "lease_exit_system")
 
 
 # Create a singleton instance

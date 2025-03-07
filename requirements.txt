@@ -1,12 +1,12 @@
 # Core Dependencies
-fastapi>=0.104.1
-uvicorn>=0.24.0
-pydantic>=2.5.2
-python-dotenv>=1.0.0
+fastapi==0.109.2
+uvicorn==0.27.1
+pydantic==2.6.1
+python-dotenv==1.0.1
 
 # Database
-motor>=3.3.2
-pymongo>=4.6.0
+motor==3.3.2
+pymongo==4.6.0
 
 # Authentication & Security
 python-jose[cryptography]>=3.3.0
@@ -14,11 +14,10 @@ passlib[bcrypt]>=1.7.4
 python-multipart>=0.0.6
 
 # AI & Machine Learning
-crewai==0.75
-crewai-tools==0.12.1
+crewai==0.102.0
+crewai-tools==0.36.0
 langchain>=0.0.350
 anthropic>=0.8.0  # Added Anthropic's official Python client
-openai>=1.12.0    # Keep OpenAI as fallback
 
 # Email
 aiosmtplib>=2.0.2
@@ -27,10 +26,11 @@ jinja2>=3.1.2
 # Background Tasks
 celery>=5.3.6
 redis>=5.0.1
+flower>=2.0.0  # Monitoring for Celery tasks
 
 # Testing
-pytest>=7.4.3
-pytest-asyncio>=0.23.2
+pytest==8.0.1
+pytest-asyncio==0.23.5
 pytest-cov>=4.1.0
 httpx>=0.25.2
 
@@ -45,6 +45,7 @@ python-slugify>=8.0.1
 python-magic>=0.4.27
 aiofiles>=23.2.1
 pyyaml>=6.0.1
+rich==13.7.0  # For better console output
 
 # WebSocket Support
 python-socketio>=5.10.0

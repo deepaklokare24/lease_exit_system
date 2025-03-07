@@ -30,7 +30,7 @@ class FormTasks:
             Task: The created task
         """
         return Task(
-            description=f"Create a form template for {form_type}",
+            description=f"Create a {form_type} form template",
             agent=self.form_agent.get_agent(),
             context={
                 "form_type": form_type,

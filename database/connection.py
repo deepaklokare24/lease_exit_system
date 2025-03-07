@@ -4,6 +4,8 @@ from typing import Optional
 from dotenv import load_dotenv
 import logging
 from contextlib import asynccontextmanager
+from config.config import config
+from functools import lru_cache
 
 # Load environment variables
 load_dotenv()
@@ -19,12 +21,10 @@ class Database:
     @classmethod
     async def connect(cls):
         """Connect to the MongoDB database"""
-        if cls.client is None:
-            mongo_uri = os.getenv("MONGODB_URI")
-            if not mongo_uri:
-                raise ValueError("MONGODB_URI environment variable not set")
+        if not cls.client:
+            mongo_uri = config.get_mongodb_uri()
             
-            logger.info(f"Connecting to MongoDB at {mongo_uri}")
+            logger.info(f"Connecting to MongoDB")
             cls.client = AsyncIOMotorClient(mongo_uri)
             
             # Set up indexes (could be moved to a separate method if there are many)
@@ -55,8 +55,8 @@ class Database:
         Returns:
             The database instance
         """
-        if cls.client is None:
-            raise ValueError("Database not connected. Call connect() first.")
+        if not cls.client:
+            raise RuntimeError("Database not connected. Call connect() first.")
         
         return cls.client[cls.db_name]
     
@@ -115,11 +115,7 @@ async def get_form_templates_collection():
     async with Database.get_collection("form_templates") as collection:
         return collection
 
-# Initialize connection at module level
-async def initialize_db():
-    """Initialize the database connection"""
-    await Database.connect()
-
-async def close_db():
-    """Close the database connection"""
-    await Database.disconnect()
+@lru_cache()
+def get_database():
+    """FastAPI dependency for getting database instance"""
+    return Database.get_db()

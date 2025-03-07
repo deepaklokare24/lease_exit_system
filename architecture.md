@@ -317,3 +317,90 @@ When implementing this diagram in your Confluence page, ensure that all componen
 5. Add tooltips for complex components
 6. Ensure the diagram is readable at different zoom levels
 {panel}
+
+## Running the Application
+
+{panel:title=Setup and Installation|borderStyle=solid|borderColor=#ccc|titleBGColor=#f0f0f0|bgColor=#fff}
+### Prerequisites
+* Python 3.9+
+* Node.js 16+
+* MongoDB
+* Redis (for Celery task queue)
+* OpenAI API key (for AI agents)
+
+### Installing Redis on macOS
+1. Install Redis using Homebrew:
+   ```bash
+   brew install redis
+   ```
+
+2. Start Redis as a service (runs in the background):
+   ```bash
+   brew services start redis
+   ```
+
+3. Alternatively, start Redis manually in a terminal:
+   ```bash
+   redis-server
+   ```
+
+4. To verify Redis is running:
+   ```bash
+   redis-cli ping
+   ```
+   You should receive a "PONG" response.
+
+### Starting the Application
+To run the complete application, you need to start several components in separate terminals:
+
+1. **Redis Server**:
+   ```bash
+   redis-server
+   ```
+
+2. **Celery Worker**:
+   ```bash
+   python start_worker.py
+   ```
+
+3. **Celery Flower** (optional, for monitoring):
+   ```bash
+   celery -A celery_app flower --port=5555
+   ```
+
+4. **FastAPI Backend**:
+   ```bash
+   uvicorn main:app --reload
+   ```
+
+5. **React Frontend**:
+   ```bash
+   cd frontend && npm start
+   ```
+
+### Database Initialization
+Before using the application, you need to initialize the database with required data:
+
+```bash
+python reset_and_seed_db.py
+```
+
+This script will:
+* Clear existing data from the database
+* Create form templates for different stages of the lease exit process
+* Create sample users for each role defined in the StakeholderRole enum
+* Create a sample lease exit record for testing
+{panel}
+
+{note:title=Implementation Note}
+When implementing this diagram in your Confluence page, ensure that all components are properly aligned and connections are clearly visible. Use the style guide to maintain consistency across different sections of the diagram.
+{note}
+
+{panel:title=Best Practices|borderStyle=dashed|borderColor=#ccc|titleBGColor=#e9f7f2|bgColor=#fff}
+1. Maintain consistent spacing between components
+2. Use appropriate line weights for different connection types
+3. Include clear labels for all components
+4. Group related components using containers
+5. Add tooltips for complex components
+6. Ensure the diagram is readable at different zoom levels
+{panel}

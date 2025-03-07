@@ -3,11 +3,11 @@ from crewai import Flow
 import os
 import yaml
 import logging
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 logger = logging.getLogger(__name__)
 
-class BaseWorkflow(Flow, ABC):
+class BaseWorkflow(Flow):
     """Base class for all workflows in the system"""
     
     def __init__(self, config_path: Optional[str] = None):
@@ -30,6 +30,12 @@ class BaseWorkflow(Flow, ABC):
             )
             if os.path.exists(default_config_path):
                 self.load_config(default_config_path)
+                
+        # Ensure subclasses implement required methods
+        if not hasattr(self, 'setup_agents') or not callable(getattr(self, 'setup_agents')):
+            raise NotImplementedError("Subclasses must implement setup_agents method")
+        if not hasattr(self, 'setup_tools') or not callable(getattr(self, 'setup_tools')):
+            raise NotImplementedError("Subclasses must implement setup_tools method")
     
     def load_config(self, config_path: str):
         """Load workflow configuration from a YAML file
@@ -44,21 +50,19 @@ class BaseWorkflow(Flow, ABC):
         except Exception as e:
             logger.error(f"Failed to load workflow configuration: {str(e)}")
     
-    @abstractmethod
     def setup_agents(self):
         """Set up agents for the workflow
         
         This method should be implemented by subclasses to set up all required agents.
         """
-        pass
+        raise NotImplementedError("Subclasses must implement setup_agents method")
     
-    @abstractmethod
     def setup_tools(self):
         """Set up tools for the workflow
         
         This method should be implemented by subclasses to set up all required tools.
         """
-        pass
+        raise NotImplementedError("Subclasses must implement setup_tools method")
     
     def get_config(self, key: str, default: Any = None) -> Any:
         """Get a configuration value

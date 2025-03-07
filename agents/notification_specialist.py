@@ -31,7 +31,7 @@ class NotificationSpecialistAgent:
             verbose=True,
             allow_delegation=False,
             tools=[self.notification_tool, self.db_tool],
-            llm=os.getenv("AI_MODEL", "anthropic/claude-3-sonnet-20240229")
+            llm=os.getenv("AI_MODEL", "anthropic/claude-3-5-sonnet-20241022")
         )
     
     async def create_notification(self, lease_exit_id: str, recipient_role: StakeholderRole, 

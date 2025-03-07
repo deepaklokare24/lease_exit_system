@@ -1,10 +1,11 @@
 from typing import Dict, Any, List, Optional, Tuple
-from crew.agent import Agent
-from database.models import Workflow, WorkflowStep, LeaseExit, StakeholderRole
-from tools.workflow_tool import WorkflowTool
-from tools.database_tool import DatabaseTool
+from crewai import Agent
+from database.models import WorkflowStatus, LeaseExit, StakeholderRole
+from utils.tools import DatabaseTool
+from datetime import datetime
+import os
 
-class WorkflowDesignerAgent(Agent):
+class WorkflowDesignerAgent:
     """
     An AI agent responsible for designing and optimizing workflows within the Lease Exit System.
     This agent analyzes lease exit context and creates appropriate workflow steps and transitions.
@@ -17,11 +18,25 @@ class WorkflowDesignerAgent(Agent):
         Args:
             config: Agent configuration parameters
         """
-        super().__init__(config)
         self.name = "Workflow Designer Agent"
         self.description = "Designs and optimizes lease exit workflows"
-        self.workflow_tool = WorkflowTool()
         self.db_tool = DatabaseTool()
+    
+    def get_agent(self) -> Agent:
+        """Create and return the Crew AI agent instance
+        
+        Returns:
+            Agent: The Crew AI agent instance
+        """
+        return Agent(
+            role="Workflow Design Specialist",
+            goal="Design efficient and effective lease exit workflows",
+            backstory="You are an expert in designing workflows for lease exit processes, with deep knowledge of real estate operations and process optimization.",
+            verbose=True,
+            allow_delegation=True,
+            tools=[self.db_tool],
+            llm=os.getenv("AI_MODEL", "anthropic/claude-3-5-sonnet-20241022")
+        )
     
     async def create_standard_workflow(self, lease_type: str, property_details: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -53,7 +68,7 @@ class WorkflowDesignerAgent(Agent):
         }
         
         # Save the workflow to database
-        workflow_id = await self.workflow_tool.save_workflow(workflow)
+        workflow_id = await self.db_tool.create_form.create_workflow(workflow)
         workflow["id"] = workflow_id
         
         return workflow
@@ -70,7 +85,7 @@ class WorkflowDesignerAgent(Agent):
             Customized workflow definition
         """
         # Retrieve the base workflow
-        base_workflow = await self.workflow_tool.get_workflow(workflow_id)
+        base_workflow = await self.db_tool.get_lease_exit.get_workflow(workflow_id)
         if not base_workflow:
             raise ValueError(f"Workflow with ID {workflow_id} not found")
         
@@ -78,7 +93,7 @@ class WorkflowDesignerAgent(Agent):
         customized_workflow = self._apply_workflow_customizations(base_workflow, customizations)
         
         # Save as a new workflow
-        new_workflow_id = await self.workflow_tool.save_workflow(customized_workflow)
+        new_workflow_id = await self.db_tool.create_form.create_workflow(customized_workflow)
         customized_workflow["id"] = new_workflow_id
         
         return customized_workflow
@@ -94,15 +109,12 @@ class WorkflowDesignerAgent(Agent):
             Performance metrics and suggestions for improvement
         """
         # Get workflow details
-        workflow = await self.workflow_tool.get_workflow(workflow_id)
+        workflow = await self.db_tool.get_lease_exit.get_workflow(workflow_id)
         if not workflow:
             raise ValueError(f"Workflow with ID {workflow_id} not found")
         
         # Get all lease exits using this workflow
-        lease_exits = await self.db_tool.find_documents(
-            "lease_exits", 
-            {"workflow_id": workflow_id}
-        )
+        lease_exits = await self.db_tool.get_lease_exit.find_lease_exits({"workflow_id": workflow_id})
         
         # Analyze performance
         performance_metrics = self._calculate_performance_metrics(workflow, lease_exits)
@@ -128,7 +140,8 @@ class WorkflowDesignerAgent(Agent):
             Generated workflow
         """
         # Get lease exit details
-        lease_exit = await self.db_tool.get_document("lease_exits", lease_exit_id)
+        lease_exit = await self.db_tool.get_lease_exit._run(lease_exit_id)
+        
         if not lease_exit:
             raise ValueError(f"Lease exit with ID {lease_exit_id} not found")
         
@@ -149,11 +162,8 @@ class WorkflowDesignerAgent(Agent):
             workflow = base_workflow
         
         # Associate workflow with lease exit
-        await self.db_tool.update_document(
-            "lease_exits",
-            lease_exit_id,
-            {"workflow_id": workflow["id"]}
-        )
+        lease_exit["workflow_id"] = workflow["id"]
+        await self.db_tool.update_lease_exit._run(lease_exit)
         
         return workflow
     
@@ -380,16 +390,8 @@ class WorkflowDesignerAgent(Agent):
         # Calculate average completion time for completed exits
         completion_times = []
         for le in lease_exits:
-            if le.get("status") == "completed" and le.get("completed_date") and le.get("created_date"):
-                try:
-                    # Assuming dates are stored as strings in ISO format
-                    from datetime import datetime
-                    completed_date = datetime.fromisoformat(le["completed_date"].replace('Z', '+00:00'))
-                    created_date = datetime.fromisoformat(le["created_date"].replace('Z', '+00:00'))
-                    days_to_complete = (completed_date - created_date).days
-                    completion_times.append(days_to_complete)
-                except (ValueError, TypeError):
-                    pass
+            if le.get("status") == "completed" and le.get("completion_time_days"):
+                completion_times.append(le["completion_time_days"])
         
         avg_completion_time = sum(completion_times) / len(completion_times) if completion_times else None
         completion_rate = (completed_exits / total_exits) * 100 if total_exits > 0 else None
@@ -554,3 +556,63 @@ class WorkflowDesignerAgent(Agent):
             customizations["name"] = f"Custom {complexity.title()} Complexity {lease_type.title()} {property_type.title()} Lease Exit"
         
         return customizations
+
+    async def find_similar_lease_exits(self, criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Find lease exits similar to the given criteria.
+        
+        Args:
+            criteria: Search criteria for finding similar lease exits
+            
+        Returns:
+            List of similar lease exits
+        """
+        # Query the database for similar lease exits
+        lease_exits = await self.db_tool.get_lease_exit.find_lease_exits(criteria, limit=5)
+        return lease_exits
+
+    async def get_lease_exit_details(self, lease_exit_id: str) -> Dict[str, Any]:
+        """
+        Get detailed information about a lease exit.
+        
+        Args:
+            lease_exit_id: ID of the lease exit
+            
+        Returns:
+            Lease exit details
+        """
+        # Get lease exit details from the database
+        lease_exit = await self.db_tool.get_lease_exit._run(lease_exit_id)
+        
+        if not lease_exit:
+            raise ValueError(f"Lease exit with ID {lease_exit_id} not found")
+            
+        return lease_exit
+        
+    async def update_workflow_status(self, lease_exit_id: str, status: str, current_step: str = None) -> Dict[str, Any]:
+        """
+        Update the status of a workflow.
+        
+        Args:
+            lease_exit_id: ID of the lease exit
+            status: New status for the workflow
+            current_step: Current step of the workflow (optional)
+            
+        Returns:
+            Updated lease exit
+        """
+        # Get the lease exit
+        lease_exit = await self.db_tool.get_lease_exit._run(lease_exit_id)
+        
+        if not lease_exit:
+            raise ValueError(f"Lease exit with ID {lease_exit_id} not found")
+            
+        # Update the database with the new status
+        lease_exit["status"] = status
+        if current_step:
+            lease_exit["current_step"] = current_step
+        
+        await self.db_tool.update_lease_exit._run(lease_exit)
+        
+        # Return the updated lease exit
+        return await self.get_lease_exit_details(lease_exit_id)

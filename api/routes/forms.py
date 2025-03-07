@@ -5,6 +5,8 @@ from utils.tools import DatabaseTool, FormValidationTool
 from pydantic import BaseModel
 import os
 from datetime import datetime
+from database.connection import Database
+from bson import ObjectId
 
 router = APIRouter()
 db_tool = DatabaseTool()
@@ -28,7 +30,7 @@ class DocumentUploadResponse(BaseModel):
     uploaded_by: str
     uploaded_at: str
 
-@router.post("/forms/templates", response_model=FormTemplateResponse)
+@router.post("/templates", response_model=FormTemplateResponse)
 async def create_form_template(template: FormTemplate):
     """Create a new form template"""
     template_data = template.dict()
@@ -37,32 +39,38 @@ async def create_form_template(template: FormTemplate):
         "updated_at": datetime.utcnow().isoformat()
     })
     
-    result = await db_tool.db.form_templates.insert_one(template_data)
+    # Get database instance from the Database class
+    db = Database.client[Database.db_name]
+    result = await db.form_templates.insert_one(template_data)
     template_data["id"] = str(result.inserted_id)
     
     return FormTemplateResponse(**template_data)
 
-@router.get("/forms/templates", response_model=List[FormTemplateResponse])
+@router.get("/templates", response_model=List[FormTemplateResponse])
 async def list_form_templates():
     """List all form templates"""
-    cursor = db_tool.db.form_templates.find()
+    # Get database instance from the Database class
+    db = Database.client[Database.db_name]
+    cursor = db.form_templates.find()
     templates = []
     async for doc in cursor:
         doc["id"] = str(doc["_id"])
         templates.append(FormTemplateResponse(**doc))
     return templates
 
-@router.get("/forms/templates/{template_id}", response_model=FormTemplateResponse)
+@router.get("/templates/{template_id}", response_model=FormTemplateResponse)
 async def get_form_template(template_id: str):
     """Get a specific form template"""
-    template = await db_tool.db.form_templates.find_one({"_id": template_id})
+    # Get database instance from the Database class
+    db = Database.client[Database.db_name]
+    template = await db.form_templates.find_one({"_id": ObjectId(template_id)})
     if not template:
         raise HTTPException(status_code=404, detail="Form template not found")
     
     template["id"] = str(template["_id"])
     return FormTemplateResponse(**template)
 
-@router.post("/forms/{lease_exit_id}/documents", response_model=DocumentUploadResponse)
+@router.post("/{lease_exit_id}/documents", response_model=DocumentUploadResponse)
 async def upload_document(
     lease_exit_id: str,
     document_type: str,
@@ -70,10 +78,16 @@ async def upload_document(
     uploaded_by: str = None
 ):
     """Upload a document for a form"""
+    # Get database instance from the Database class
+    db = Database.client[Database.db_name]
+    
     # Ensure the lease exit exists
-    lease_exit = await db_tool.get_lease_exit(lease_exit_id)
-    if not lease_exit:
+    doc = await db.lease_exits.find_one({"_id": ObjectId(lease_exit_id)})
+    if not doc:
         raise HTTPException(status_code=404, detail="Lease exit not found")
+    
+    doc["id"] = str(doc.pop("_id"))
+    lease_exit = LeaseExit(**doc)
     
     # Create documents directory if it doesn't exist
     upload_dir = f"uploads/{lease_exit_id}"
@@ -95,35 +109,63 @@ async def upload_document(
     )
     
     # Add document to lease exit
+    if not lease_exit.documents:
+        lease_exit.documents = []
     lease_exit.documents.append(document)
-    await db_tool.update_lease_exit(lease_exit)
+    
+    # Update the lease exit in the database
+    await db.lease_exits.update_one(
+        {"_id": ObjectId(lease_exit_id)},
+        {"$set": {"documents": [doc.dict() for doc in lease_exit.documents]}}
+    )
     
     return DocumentUploadResponse(**document.dict())
 
-@router.get("/forms/{lease_exit_id}/documents", response_model=List[DocumentUploadResponse])
+@router.get("/{lease_exit_id}/documents", response_model=List[DocumentUploadResponse])
 async def list_documents(lease_exit_id: str):
     """List all documents for a lease exit"""
-    lease_exit = await db_tool.get_lease_exit(lease_exit_id)
-    if not lease_exit:
+    # Get database instance from the Database class
+    db = Database.client[Database.db_name]
+    
+    # Ensure the lease exit exists
+    doc = await db.lease_exits.find_one({"_id": ObjectId(lease_exit_id)})
+    if not doc:
         raise HTTPException(status_code=404, detail="Lease exit not found")
+    
+    doc["id"] = str(doc.pop("_id"))
+    lease_exit = LeaseExit(**doc)
     
     return [DocumentUploadResponse(**doc.dict()) for doc in lease_exit.documents]
 
-@router.get("/forms/{lease_exit_id}", response_model=List[FormData])
+@router.get("/{lease_exit_id}", response_model=List[FormData])
 async def list_forms(lease_exit_id: str):
     """List all forms for a lease exit"""
-    lease_exit = await db_tool.get_lease_exit(lease_exit_id)
-    if not lease_exit:
+    # Get database instance from the Database class
+    db = Database.client[Database.db_name]
+    
+    # Ensure the lease exit exists
+    doc = await db.lease_exits.find_one({"_id": ObjectId(lease_exit_id)})
+    if not doc:
         raise HTTPException(status_code=404, detail="Lease exit not found")
+    
+    doc["id"] = str(doc.pop("_id"))
+    lease_exit = LeaseExit(**doc)
     
     return list(lease_exit.forms.values())
 
-@router.get("/forms/{lease_exit_id}/{form_type}", response_model=FormData)
+@router.get("/{lease_exit_id}/{form_type}", response_model=FormData)
 async def get_form(lease_exit_id: str, form_type: str):
     """Get a specific form for a lease exit"""
-    lease_exit = await db_tool.get_lease_exit(lease_exit_id)
-    if not lease_exit:
+    # Get database instance from the Database class
+    db = Database.client[Database.db_name]
+    
+    # Ensure the lease exit exists
+    doc = await db.lease_exits.find_one({"_id": ObjectId(lease_exit_id)})
+    if not doc:
         raise HTTPException(status_code=404, detail="Lease exit not found")
+    
+    doc["id"] = str(doc.pop("_id"))
+    lease_exit = LeaseExit(**doc)
     
     form = lease_exit.forms.get(form_type)
     if not form:

@@ -202,25 +202,53 @@ class NotificationTasks:
         )
     
     async def execute_resend_failed_notifications(self) -> Dict[str, Any]:
-        """Execute the resending of failed notifications
+        """Execute resending of failed notifications
         
         Returns:
-            Dict: The execution result
+            Dict[str, Any]: The execution result
         """
         try:
-            result = await self.notification_agent.resend_failed_notifications()
+            # Get all failed notifications
+            failed_notifications = await self.db_tool.get_lease_exit.find_notifications(
+                {"status": "failed"}
+            )
             
-            logger.info(f"Resent failed notifications: {result}")
+            results = []
+            for notification in failed_notifications:
+                # Attempt to resend the notification
+                try:
+                    await self.notification_tool.send_email_notification(
+                        notification["recipient_email"],
+                        notification["subject"],
+                        notification["message"]
+                    )
+                    
+                    # Update the notification status
+                    notification["status"] = "sent"
+                    notification["sent_at"] = datetime.utcnow()
+                    await self.db_tool.update_lease_exit.update_notification(
+                        notification["id"], 
+                        {"status": "sent", "sent_at": datetime.utcnow()}
+                    )
+                    
+                    results.append({
+                        "notification_id": notification["id"],
+                        "status": "resent"
+                    })
+                except Exception as e:
+                    results.append({
+                        "notification_id": notification["id"],
+                        "status": "failed",
+                        "error": str(e)
+                    })
             
             return {
-                "success": True,
-                "message": "Failed notifications resent",
-                "result": result
+                "status": "completed",
+                "message": f"Attempted to resend {len(failed_notifications)} failed notifications",
+                "results": results
             }
-        
         except Exception as e:
-            logger.error(f"Error resending failed notifications: {str(e)}")
             return {
-                "success": False,
+                "status": "error",
                 "message": f"Error resending failed notifications: {str(e)}"
             }

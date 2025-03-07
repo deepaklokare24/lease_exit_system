@@ -3,11 +3,11 @@
 
 # AI Model Configuration
 ai_models:
-  default: "anthropic/claude-3-sonnet-20240229"
-  form_creator: "anthropic/claude-3-sonnet-20240229"
-  workflow_designer: "anthropic/claude-3-sonnet-20240229"
-  approval_architect: "anthropic/claude-3-sonnet-20240229"
-  notification_specialist: "anthropic/claude-3-sonnet-20240229"
+  default: "anthropic/claude-3-5-sonnet-20241022"
+  form_creator: "anthropic/claude-3-5-sonnet-20241022"
+  workflow_designer: "anthropic/claude-3-5-sonnet-20241022"
+  approval_architect: "anthropic/claude-3-5-sonnet-20241022"
+  notification_specialist: "anthropic/claude-3-5-sonnet-20241022"
 
 # Agent Configuration
 agents:
@@ -72,6 +72,28 @@ agents:
       email_templates_enabled: true
       notification_batching: true
       max_notifications_per_day: 10
+      
+  # Agents used in the LeaseExitFlow
+  workflow_design_specialist:
+    role: "Workflow Design Specialist"
+    goal: "Design and optimize lease exit workflows"
+    backstory: "You are an expert in designing efficient workflows for lease exits. You understand the complexities of lease exit processes and can design workflows that ensure all stakeholders are properly involved and all necessary steps are completed."
+    verbose: true
+    allow_delegation: true
+    
+  form_creation_expert:
+    role: "Form Creation Expert"
+    goal: "Create and validate forms for lease exit processes"
+    backstory: "You are an expert in creating forms for lease exit processes. You understand what information is needed at each stage and can create forms that capture all necessary data while being user-friendly."
+    verbose: true
+    allow_delegation: true
+    
+  approval_process_architect:
+    role: "Approval Process Architect"
+    goal: "Design and manage approval processes for lease exits"
+    backstory: "You are an expert in designing approval processes for lease exits. You understand the roles of different stakeholders and can create approval workflows that ensure all necessary approvals are obtained in a timely manner."
+    verbose: true
+    allow_delegation: true
 
 # Role Mappings
 # Maps agent IDs to roles for easier reference in workflows

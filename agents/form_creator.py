@@ -1,11 +1,12 @@
 from typing import Dict, Any, List, Optional
-from crew.agent import Agent
-from database.models import Form, FormField, LeaseExit
+from crewai import Agent
+from database.models import FormData, LeaseExit
 from utils.form_validator import FormValidator
-from tools.form_tool import FormTool
-from tools.database_tool import DatabaseTool
+from utils.tools import FormValidationTool as FormTool
+from utils.tools import DatabaseTool
+import os
 
-class FormCreatorAgent(Agent):
+class FormCreatorAgent:
     """
     An AI agent responsible for creating, managing, and validating forms within the Lease Exit System.
     This agent analyzes the lease exit context and generates appropriate forms with validation rules.
@@ -18,13 +19,28 @@ class FormCreatorAgent(Agent):
         Args:
             config: Agent configuration parameters
         """
-        super().__init__(config)
         self.name = "Form Creator Agent"
         self.description = "Creates and manages dynamic forms based on lease exit context"
         self.form_tool = FormTool()
         self.db_tool = DatabaseTool()
         self.validator = FormValidator()
         
+    def get_agent(self) -> Agent:
+        """Create and return the Crew AI agent instance
+        
+        Returns:
+            Agent: The Crew AI agent instance
+        """
+        return Agent(
+            role="Form Creation Expert",
+            goal="Create intuitive and comprehensive forms for lease exit processes",
+            backstory="You are a specialist in form design with experience in real estate documentation and data collection requirements.",
+            verbose=True,
+            allow_delegation=True,
+            tools=[self.form_tool, self.db_tool],
+            llm=os.getenv("AI_MODEL", "anthropic/claude-3-5-sonnet-20241022")
+        )
+    
     async def create_lease_exit_form(self, lease_type: str, property_details: Dict[str, Any]) -> Dict[str, Any]:
         """
         Create a dynamic lease exit initiation form based on lease type and property details.
@@ -53,7 +69,12 @@ class FormCreatorAgent(Agent):
         }
         
         # Save the form to database
-        form_id = await self.form_tool.save_form(form)
+        form_data = {
+            "form_type": "lease_exit_initiation",
+            "data": form,
+            "status": "active"
+        }
+        form_id = await self.db_tool.create_form._run(None, form_data)
         form["id"] = form_id
         
         return form
@@ -70,7 +91,8 @@ class FormCreatorAgent(Agent):
             Customized form definition
         """
         # Retrieve the base form
-        base_form = await self.form_tool.get_form(form_id)
+        base_form = await self.db_tool.get_lease_exit.get_form(form_id)
+        
         if not base_form:
             raise ValueError(f"Form with ID {form_id} not found")
         
@@ -84,7 +106,12 @@ class FormCreatorAgent(Agent):
         customized_form["stakeholder_role"] = stakeholder_role
         
         # Save as a new form
-        new_form_id = await self.form_tool.save_form(customized_form)
+        form_data = {
+            "form_type": f"{stakeholder_role}_form",
+            "data": customized_form,
+            "status": "active"
+        }
+        new_form_id = await self.db_tool.create_form._run(None, form_data)
         customized_form["id"] = new_form_id
         
         return customized_form
@@ -101,7 +128,8 @@ class FormCreatorAgent(Agent):
             Validation results with any errors
         """
         # Get the form with its validation rules
-        form = await self.form_tool.get_form(form_id)
+        form = await self.db_tool.get_lease_exit.get_form(form_id)
+        
         if not form:
             raise ValueError(f"Form with ID {form_id} not found")
         
@@ -127,7 +155,8 @@ class FormCreatorAgent(Agent):
             List of required forms
         """
         # Get lease exit details
-        lease_exit = await self.db_tool.get_document("lease_exits", lease_exit_id)
+        lease_exit = await self.db_tool.get_lease_exit._run(lease_exit_id)
+        
         if not lease_exit:
             raise ValueError(f"Lease exit with ID {lease_exit_id} not found")
         
